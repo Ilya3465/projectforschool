@@ -41,7 +41,7 @@ def create_subject_keyboard():
     nice_names = {
         "math_profile_10": "📐 Профильная математика (10 класс)",
         "math_base_10": "📏 Базовая математика (10 класс)",
-        "physics_10": "⚛️ Физика (10 класс)",
+        "physics": "⚛️ Физика (10 класс)",
         "russian_lang": "📝 Русский язык",
         "history": "📜 История"
     }
@@ -64,6 +64,10 @@ def create_answer_keyboard(options, q_index):
     keyboard = []
     for i, option in enumerate(options):
         keyboard.append([InlineKeyboardButton(text=option, callback_data=f"ans_{q_index}_{i}")])
+
+    # ➕ Кнопка прекращения теста
+    keyboard.append([InlineKeyboardButton(text="⏹ Прекратить тест", callback_data="stop_quiz")])
+
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
 
@@ -94,6 +98,19 @@ async def process_subject_choice(callback: types.CallbackQuery, state: FSMContex
 
     await send_question(callback, state)
 
+
+@dp.callback_query(F.data == "stop_quiz")
+async def process_stop_quiz(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+
+    # Если нет данных — тест ещё не начался
+    if not data.get('questions'):
+        await callback.answer("Сначала выберите предмет 📚")
+        return
+
+    # Финишируем с текущими результатами
+    await finish_quiz(callback, state)
+    await callback.answer("Тест завершён досрочно")
 
 async def send_question(callback_or_message, state: FSMContext):
     data = await state.get_data()

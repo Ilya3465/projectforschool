@@ -42,8 +42,8 @@ def create_subject_keyboard():
         "math_profile_10": "📐 Профильная математика (10 класс)",
         "math_base_10": "📏 Базовая математика (10 класс)",
         "physics": "⚛️ Физика (10 класс)",
-        "russian_lang": "📝 Русский язык",
-        "history": "📜 История"
+        "russian_profile_10": "📝 Русский язык",
+        "history_profile_10": "📜 История"
     }
 
     for subject_key in questions.keys():
@@ -86,16 +86,16 @@ async def cmd_start(message: types.Message, state: FSMContext):
 
 @dp.callback_query(F.data.startswith("start_"))
 async def process_subject_choice(callback: types.CallbackQuery, state: FSMContext):
-    subject = callback.data.split("_")[1]
+    # ✅ Исправлено: собираем ключ целиком, учитывая все подчёркивания
+    subject = "_".join(callback.data.split("_")[1:])
+
     questions = load_questions()[subject]
 
     if not questions:
         await callback.answer("В этом предмете пока нет вопросов :(", show_alert=True)
         return
 
-    # Сохраняем данные в память (state)
     await state.update_data(subject=subject, questions=questions, current_q=0, score=0)
-
     await send_question(callback, state)
 
 
